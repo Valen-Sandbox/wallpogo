@@ -10,7 +10,7 @@ end, "WallPogo_WallRun_SpeedMult")
 
 local originOffset  = Vector(0, 0, 40)
 local jumpVelOffset = Vector(150, 0, 300)
-local wallRunAng    = 35
+local wallRunAng    = 28
 local traceDist     = 30
 local boneAngCache  = {}
 
