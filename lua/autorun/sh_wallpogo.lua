@@ -82,12 +82,14 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
         setNW2Bool(ply, "WallPogo_IsWallRunning", true)
         setNW2Bool(ply, "WallPogo_IsInverted", inverted)
 
-        local curTime = CurTime()
-        local lastStep = ply.WallPogoLastStep or 0
+        if SERVER then
+            local curTime = CurTime()
+            local lastStep = ply.WallPogoLastStep or 0
 
-        if lastStep <= curTime and IsFirstTimePredicted() then
-            ply:EmitSound(wallRunSounds[math.random(1, 8)], 100, 100)
-            ply.WallPogoLastStep = curTime + 0.2
+            if lastStep <= curTime and IsFirstTimePredicted() then
+                ply:EmitSound(wallRunSounds[math.random(1, 8)], 100, 100)
+                ply.WallPogoLastStep = curTime + 0.2
+            end
         end
 
         return true
@@ -173,8 +175,12 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
 
     setVelocity(ply, jumpVel + jumpVelOffset)
     setNW2Bool(ply, "WallPogo_IsWallRunning", false)
-    ply:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 100, 100, 0.25)
-    -- ply:EmitSound("player/footsteps/woodpanel" .. math.random(1, 4) .. ".wav", 100, 100, 0.65)
+
+    if SERVER then
+        ply:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 100, 100, 0.25)
+        -- ply:EmitSound("player/footsteps/woodpanel" .. math.random(1, 4) .. ".wav", 100, 100, 0.65)
+    end
+
     ply.WallPogoJumpSide = jumpSide
 end)
 
