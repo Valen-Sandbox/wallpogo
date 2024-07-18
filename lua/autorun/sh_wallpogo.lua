@@ -44,7 +44,7 @@ local wallRunAnims = {
     duel     = ACT_HL2MP_RUN_DUEL,
     passive  = ACT_HL2MP_RUN_PASSIVE,
     magic    = ACT_HL2MP_RUN_DUEL,
-    knife    = ACT_HL2MP_SIT_KNIFE,
+    knife    = ACT_HL2MP_RUN_KNIFE,
 }
 
 local plyMeta = FindMetaTable("Player")
