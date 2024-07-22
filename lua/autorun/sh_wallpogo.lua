@@ -32,7 +32,7 @@ local wallRunSounds = {
 }
 
 local wallRunAnims = {
-    revolver = ACT_HL2MP_RUN_PISTOL,
+    revolver = ACT_HL2MP_RUN_REVOLVER,
     pistol   = ACT_HL2MP_RUN_PISTOL,
     shotgun  = ACT_HL2MP_RUN_SHOTGUN,
     smg      = ACT_HL2MP_RUN_SMG1,
