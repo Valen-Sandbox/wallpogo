@@ -1,5 +1,7 @@
-local wallPogoEnabled  = CreateConVar("sv_wallpogo_enabled", "1", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Whether WallPogo should be enabled or not; takes a value of 0 or 1.", 0, 1):GetBool()
-local wallRunSpeedMult = CreateConVar("sv_wallpogo_wallrun_speedmult", "1", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Sets the multiplier for wallrun speed.", 0):GetFloat()
+local cvarFlags         = {FCVAR_ARCHIVE + FCVAR_REPLICATED}
+local wallPogoEnabled   = CreateConVar("sv_wallpogo_enabled", "1", cvarFlags, "Whether WallPogo should be enabled or not; takes a value of 0 or 1.", 0, 1):GetBool()
+local wallRunSpeedMult  = CreateConVar("sv_wallpogo_wallrun_speedmult", "1", cvarFlags, "Sets the multiplier for wallrun speed.", 0):GetFloat()
+local wallJumpSpeedMult = CreateConVar("sv_wallpogo_walljump_speedmult", "1", cvarFlags, "Sets the multiplier for walljump speed.", 0):GetFloat()
 
 cvars.AddChangeCallback("sv_wallpogo_enabled", function(_, _, newVal)
     wallPogoEnabled = tobool(newVal)
@@ -7,11 +9,15 @@ end, "WallPogo_Enabled")
 cvars.AddChangeCallback("sv_wallpogo_wallrun_speedmult", function(_, _, newVal)
     wallRunSpeedMult = tonumber(newVal)
 end, "WallPogo_WallRun_SpeedMult")
+cvars.AddChangeCallback("sv_wallpogo_walljump_speedmult", function(_, _, newVal)
+    wallJumpSpeedMult = tonumber(newVal)
+end, "WallPogo_WallJump_SpeedMult")
 
 local originOffset  = Vector(0, 0, 40)
 local jumpVelOffset = Vector(150, 0, 300)
 local wallRunAng    = 28
 local traceDist     = 30
+local wallJumpMult  = 150
 local boneAngCache  = {}
 
 local wallRunSounds = {
@@ -67,7 +73,7 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
     plyTrace.filter = ply
     plyTrace.endpos = origin + ang:Right() * (inverted and -traceDist or traceDist)
 
-    debugoverlay.Line(plyTrace.start, plyTrace.endpos)
+    -- debugoverlay.Line(plyTrace.start, plyTrace.endpos)
 
     local traceResult = util.TraceLine(plyTrace)
 
@@ -170,8 +176,18 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
     local jumpSide = isInverted and "left" or "right"
     if ply.WallPogoJumpSide == jumpSide then return end
 
-    local jumpVel = ply:GetRight() * ply:WorldToLocal(getVelocity(ply) + ply:GetPos()).y
-    jumpVelOffset.x = isInverted and -150 or 150
+    local plyVel     = getVelocity(ply)
+    local plyNorm    = plyVel:GetNormalized()
+    local jumpVel    = ply:GetRight() * ply:WorldToLocal(plyVel + ply:GetPos()).y
+
+    -- TODO: Try to improve this process for non-cardinal direction facing walls?
+    if math.abs(plyNorm.x) < math.abs(plyNorm.y) then
+        local jumpMult  = plyNorm.y > 0 and -1 or 1
+        jumpVelOffset.x = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+    else
+        local jumpMult  = plyNorm.x > 0 and 1 or -1
+        jumpVelOffset.y = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+    end
 
     setVelocity(ply, jumpVel + jumpVelOffset)
     setNW2Bool(ply, "WallPogo_IsWallRunning", false)
@@ -185,6 +201,7 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
 end)
 
 hook.Add("CalcMainActivity", "WallPogo_WallRunAnims", function(ply)
+    -- TODO: Add Enhanced Camera/Gmod Legs support?
     local isWallRunning = getNW2Bool(ply, "WallPogo_IsWallRunning", false)
     local plyAnimAng = boneAngCache[ply] or Angle(0, 0, 0)
 
