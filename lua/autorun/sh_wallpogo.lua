@@ -73,8 +73,6 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
     plyTrace.filter = ply
     plyTrace.endpos = origin + ang:Right() * (inverted and -traceDist or traceDist)
 
-    -- debugoverlay.Line(plyTrace.start, plyTrace.endpos)
-
     local traceResult = util.TraceLine(plyTrace)
 
     if traceResult.HitWorld then
@@ -103,23 +101,6 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
         return false
     end
 end
-
---[[
-local function groundTrace(ply, origin, ang, plyVel)
-    local plyTrace = {}
-    plyTrace.start = origin
-    plyTrace.filter = ply
-    plyTrace.endpos = origin - ang:Up() * 25
-
-    debugoverlay.Line(plyTrace.start, plyTrace.endpos)
-
-    if traceResult.HitWorld then
-        return 10
-    else
-        return 0
-    end
-end
-]]
 
 hook.Add("SetupMove", "WallPogo_PreMove", function(ply, mv)
     if not wallPogoEnabled then return end
@@ -151,21 +132,6 @@ hook.Add("SetupMove", "WallPogo_PreMove", function(ply, mv)
     end
 end)
 
---[[
--- Attempting to do a bit of wall magnetism here
-hook.Add("PlayerPostThink", "WallPogo_PostMove", function(ply)
-    if not ply:GetNW2Bool("WallPogo_IsWallRunning", false) then return end
-
-    local plyVel = ply:GetVelocity()
-
-    if ply.WallPogoLastRunTime >= CurTime() then
-        --plyVel.z = 10
-        print(CurTime() - ply.WallPogoLastRunTime)
-    end
-        ply:SetLocalVelocity(plyVel)
-end)
-]]
-
 hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
     if key ~= IN_JUMP then return end
     if not IsFirstTimePredicted() then return end
@@ -194,7 +160,6 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
 
     if SERVER then
         ply:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 100, 100, 0.25)
-        -- ply:EmitSound("player/footsteps/woodpanel" .. math.random(1, 4) .. ".wav", 100, 100, 0.65)
     end
 
     ply.WallPogoJumpSide = jumpSide
