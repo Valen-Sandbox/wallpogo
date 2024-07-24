@@ -14,11 +14,11 @@ cvars.AddChangeCallback("sv_wallpogo_walljump_speedmult", function(_, _, newVal)
 end, "WallPogo_WallJump_SpeedMult")
 
 local originOffset  = Vector(0, 0, 40)
-local jumpVelOffset = Vector(150, 0, 300)
 local wallRunAng    = 28
 local traceDist     = 30
 local wallJumpMult  = 150
 local boneAngCache  = {}
+local jumpVelCache  = {}
 
 local wallRunSounds = {
     "player/footsteps/wood1.wav",
@@ -145,17 +145,20 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
     local plyVel     = getVelocity(ply)
     local plyNorm    = plyVel:GetNormalized()
     local jumpVel    = ply:GetRight() * ply:WorldToLocal(plyVel + ply:GetPos()).y
+    local velOffset  = jumpVelCache[ply] or Vector(0, 0, 300)
 
     -- TODO: Try to improve this process for non-cardinal direction facing walls?
     if math.abs(plyNorm.x) < math.abs(plyNorm.y) then
         local jumpMult  = plyNorm.y > 0 and -1 or 1
-        jumpVelOffset.x = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+        velOffset.x = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+        velOffset.y = 0
     else
         local jumpMult  = plyNorm.x > 0 and 1 or -1
-        jumpVelOffset.y = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+        velOffset.y = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+        velOffset.x = 0
     end
 
-    setVelocity(ply, jumpVel + jumpVelOffset)
+    setVelocity(ply, jumpVel + velOffset)
     setNW2Bool(ply, "WallPogo_IsWallRunning", false)
 
     if SERVER then
@@ -163,6 +166,7 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
     end
 
     ply.WallPogoJumpSide = jumpSide
+    jumpVelCache[ply] = velOffset
 end)
 
 hook.Add("CalcMainActivity", "WallPogo_WallRunAnims", function(ply)
