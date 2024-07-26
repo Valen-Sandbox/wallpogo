@@ -64,12 +64,14 @@ local getVelocity = entMeta.GetVelocity
 local setVelocity = entMeta.SetVelocity
 local getMoveType = entMeta.GetMoveType
 local onGround = entMeta.OnGround
+local getTable = entMeta.GetTable
 
 local function sideTrace(ply, origin, ang, plyVel, inverted)
     origin = origin + originOffset
 
-    local plyTrace = ply.WallPogo
-    plyTrace.start = origin
+    local plyTbl    = getTable(ply)
+    local plyTrace  = plyTbl.WallPogo
+    plyTrace.start  = origin
     plyTrace.filter = ply
     plyTrace.endpos = origin + ang:Right() * (inverted and -traceDist or traceDist)
 
@@ -78,9 +80,7 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
     if traceResult.HitWorld then
         local wallRunVel = plyVel:GetNormalized() * 10 * wallRunSpeedMult
 
-        if not getNW2Bool(ply, "WallPogo_IsWallRunning", false) then
-            ply.WallPogoLastRunTime = CurTime() + 0.2
-        end
+        plyTbl.WallPogoLastHitNorm = traceResult.HitNormal
 
         setVelocity(ply, wallRunVel)
         setNW2Bool(ply, "WallPogo_IsWallRunning", true)
@@ -88,11 +88,11 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
 
         if SERVER then
             local curTime = CurTime()
-            local lastStep = ply.WallPogoLastStep or 0
+            local lastStep = plyTbl.WallPogoLastStep or 0
 
             if lastStep <= curTime and IsFirstTimePredicted() then
                 ply:EmitSound(wallRunSounds[math.random(1, 8)], 100, 100)
-                ply.WallPogoLastStep = curTime + 0.2
+                plyTbl.WallPogoLastStep = curTime + 0.2
             end
         end
 
@@ -138,9 +138,10 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
     if not getNW2Bool(ply, "WallPogo_IsWallRunning", false) then return end
 
     -- Make sure that the player can only jump once without jumping to a different wall first
+    local plyTbl     = getTable(ply)
     local isInverted = getNW2Bool(ply, "WallPogo_IsInverted", false)
-    local jumpSide = isInverted and "left" or "right"
-    if ply.WallPogoJumpSide == jumpSide then return end
+    local jumpSide   = plyTbl.WallPogoLastHitNorm
+    if plyTbl.WallPogoJumpSide == jumpSide then return end
 
     local plyVel     = getVelocity(ply)
     local plyNorm    = plyVel:GetNormalized()
@@ -165,7 +166,7 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
         ply:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 100, 100, 0.25)
     end
 
-    ply.WallPogoJumpSide = jumpSide
+    plyTbl.WallPogoJumpSide = jumpSide
     jumpVelCache[ply] = velOffset
 end)
 
@@ -178,7 +179,7 @@ hook.Add("CalcMainActivity", "WallPogo_WallRunAnims", function(ply)
     if plyAnimAng.y ~= 0 or isWallRunning then
         local angDirection = getNW2Bool(ply, "WallPogo_IsInverted", false) and wallRunAng or -wallRunAng
         plyAnimAng.y = Lerp(FrameTime() * (isWallRunning and 4 or 5), plyAnimAng.y, isWallRunning and angDirection or 0)
-        ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_Pelvis"), plyAnimAng, false)
+        ply:ManipulateBoneAngles(ply:LookupBone("ValveBiped.Bip01_Pelvis") or 0, plyAnimAng, false)
         boneAngCache[ply] = plyAnimAng
     end
 
