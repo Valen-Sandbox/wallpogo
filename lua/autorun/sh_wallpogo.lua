@@ -1,22 +1,27 @@
 local cvarFlags         = {FCVAR_ARCHIVE + FCVAR_REPLICATED}
 local wallPogoEnabled   = CreateConVar("sv_wallpogo_enabled", "1", cvarFlags, "Whether WallPogo should be enabled or not; takes a value of 0 or 1.", 0, 1):GetBool()
 local wallRunSpeedMult  = CreateConVar("sv_wallpogo_wallrun_speedmult", "1", cvarFlags, "Sets the multiplier for wallrun speed.", 0):GetFloat()
-local wallJumpSpeedMult = CreateConVar("sv_wallpogo_walljump_speedmult", "1", cvarFlags, "Sets the multiplier for walljump speed.", 0):GetFloat()
+local wallJumpSideMult  = CreateConVar("sv_wallpogo_walljump_sidemult", "1", cvarFlags, "Sets the multiplier for horizontal walljump speed.", 0):GetFloat()
+local wallJumpVertMult  = CreateConVar("sv_wallpogo_walljump_vertmult", "1", cvarFlags, "Sets the multiplier for vertical walljump speed.", 0):GetFloat()
 
 cvars.AddChangeCallback("sv_wallpogo_enabled", function(_, _, newVal)
     wallPogoEnabled = tobool(newVal)
 end, "WallPogo_Enabled")
 cvars.AddChangeCallback("sv_wallpogo_wallrun_speedmult", function(_, _, newVal)
-    wallRunSpeedMult = tonumber(newVal)
+    wallRunSpeedMult = tonumber(newVal) or 1
 end, "WallPogo_WallRun_SpeedMult")
-cvars.AddChangeCallback("sv_wallpogo_walljump_speedmult", function(_, _, newVal)
-    wallJumpSpeedMult = tonumber(newVal)
-end, "WallPogo_WallJump_SpeedMult")
+cvars.AddChangeCallback("sv_wallpogo_walljump_sidemult", function(_, _, newVal)
+    wallJumpSideMult = tonumber(newVal) or 1
+end, "WallPogo_WallJump_SideMult")
+cvars.AddChangeCallback("sv_wallpogo_walljump_vertmult", function(_, _, newVal)
+    wallJumpVertMult = tonumber(newVal) or 1
+end, "WallPogo_WallJump_VertMult")
 
 local originOffset  = Vector(0, 0, 40)
 local wallRunAng    = 28
 local traceDist     = 30
-local wallJumpMult  = 150
+local wallJumpSide  = 150
+local wallJumpVert  = 300
 local boneAngCache  = {}
 local jumpVelCache  = {}
 
@@ -146,18 +151,20 @@ hook.Add("KeyPress", "WallPogo_WallJump", function(ply, key)
     local plyVel     = getVelocity(ply)
     local plyNorm    = plyVel:GetNormalized()
     local jumpVel    = ply:GetRight() * ply:WorldToLocal(plyVel + ply:GetPos()).y
-    local velOffset  = jumpVelCache[ply] or Vector(0, 0, 300)
+    local velOffset  = jumpVelCache[ply] or Vector(0, 0, wallJumpVert)
 
     -- TODO: Try to improve this process for non-cardinal direction facing walls?
     if math.abs(plyNorm.x) < math.abs(plyNorm.y) then
         local jumpMult  = plyNorm.y > 0 and -1 or 1
-        velOffset.x = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+        velOffset.x = jumpMult * (isInverted and -wallJumpSide or wallJumpSide) * wallJumpSideMult
         velOffset.y = 0
     else
         local jumpMult  = plyNorm.x > 0 and 1 or -1
-        velOffset.y = jumpMult * (isInverted and -wallJumpMult or wallJumpMult) * wallJumpSpeedMult
+        velOffset.y = jumpMult * (isInverted and -wallJumpSide or wallJumpSide) * wallJumpSideMult
         velOffset.x = 0
     end
+
+    velOffset.z = wallJumpVert * wallJumpVertMult
 
     setVelocity(ply, jumpVel + velOffset)
     setNW2Bool(ply, "WallPogo_IsWallRunning", false)
