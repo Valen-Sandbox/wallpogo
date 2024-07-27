@@ -8,5 +8,6 @@ https://github.com/user-attachments/assets/a1cc135f-727f-4f1d-80ad-83873bde351c
 ## ConVars
 - **sv_wallpogo_enabled**: Whether WallPogo should be enabled or not as a boolean value.
 - **sv_wallpogo_wallrun_speedmult**: Sets the multiplier for wallrun speed.
+- **sv_wallpogo_wallrun_minmult**: Sets the multiplier for the minimum amount of velocity relative to your sprint speed to start a wallrun.
 - **sv_wallpogo_walljump_sidemult**: Sets the multiplier for horizontal walljump speed.
 - **sv_wallpogo_walljump_vertmult**: Sets the multiplier for vertical walljump speed.
