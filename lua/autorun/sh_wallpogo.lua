@@ -1,6 +1,7 @@
 local cvarFlags         = {FCVAR_ARCHIVE + FCVAR_REPLICATED}
 local wallPogoEnabled   = CreateConVar("sv_wallpogo_enabled", "1", cvarFlags, "Whether WallPogo should be enabled or not; takes a value of 0 or 1.", 0, 1):GetBool()
 local wallRunSpeedMult  = CreateConVar("sv_wallpogo_wallrun_speedmult", "1", cvarFlags, "Sets the multiplier for wallrun speed.", 0):GetFloat()
+local wallRunMinMult    = CreateConVar("sv_wallpogo_wallrun_minmult", "0.9", cvarFlags, "Sets the multiplier for the minimum amount of velocity relative to your sprint speed to start a wallrun.", 0):GetFloat()
 local wallJumpSideMult  = CreateConVar("sv_wallpogo_walljump_sidemult", "1", cvarFlags, "Sets the multiplier for horizontal walljump speed.", 0):GetFloat()
 local wallJumpVertMult  = CreateConVar("sv_wallpogo_walljump_vertmult", "1", cvarFlags, "Sets the multiplier for vertical walljump speed.", 0):GetFloat()
 
@@ -10,6 +11,9 @@ end, "WallPogo_Enabled")
 cvars.AddChangeCallback("sv_wallpogo_wallrun_speedmult", function(_, _, newVal)
     wallRunSpeedMult = tonumber(newVal) or 1
 end, "WallPogo_WallRun_SpeedMult")
+cvars.AddChangeCallback("sv_wallpogo_wallrun_minmult", function(_, _, newVal)
+    wallRunMinMult = tonumber(newVal) or 0.9
+end)
 cvars.AddChangeCallback("sv_wallpogo_walljump_sidemult", function(_, _, newVal)
     wallJumpSideMult = tonumber(newVal) or 1
 end, "WallPogo_WallJump_SideMult")
@@ -112,7 +116,7 @@ hook.Add("SetupMove", "WallPogo_PreMove", function(ply, mv)
     local moveType = getMoveType(ply)
     local plyVel = getVelocity(ply)
 
-    if moveType == MOVETYPE_NOCLIP or moveType == MOVETYPE_LADDER or onGround(ply) or plyVel:Length() < getRunSpeed(ply) * 0.9 or inVehicle(ply) then
+    if moveType == MOVETYPE_NOCLIP or moveType == MOVETYPE_LADDER or onGround(ply) or plyVel:Length() < getRunSpeed(ply) * wallRunMinMult or inVehicle(ply) then
         setNW2Bool(ply, "WallPogo_IsWallRunning", false)
         ply.WallPogoJumpSide = nil
 
