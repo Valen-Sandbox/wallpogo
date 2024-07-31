@@ -28,6 +28,7 @@ local wallJumpSide  = 150
 local wallJumpVert  = 300
 local boneAngCache  = {}
 local jumpVelCache  = {}
+local hasDSteps     = file.Exists("sound/dsteps/concrete/concrete_run1.ogg", "GAME") -- Check for DSteps that works on both client and server
 
 local wallRunSounds = {
     "player/footsteps/wood1.wav",
@@ -75,6 +76,19 @@ local getMoveType = entMeta.GetMoveType
 local onGround = entMeta.OnGround
 local getTable = entMeta.GetTable
 
+local function getStepSound()
+    local sndName
+
+    -- Compatibility for DSteps; that mod stops all sounds with a footstep path that occur on the player
+    if hasDSteps then
+        sndName = "dsteps/concrete/concrete_run" .. math.random(1, 11) .. ".ogg"
+    else
+        sndName = wallRunSounds[math.random(1, 8)]
+    end
+
+    return sndName
+end
+
 local function sideTrace(ply, origin, ang, plyVel, inverted)
     origin = origin + originOffset
 
@@ -100,7 +114,7 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
             local lastStep = plyTbl.WallPogoLastStep or 0
 
             if lastStep <= curTime and IsFirstTimePredicted() then
-                ply:EmitSound(wallRunSounds[math.random(1, 8)], 100, 100)
+                ply:EmitSound(getStepSound(), 100, 100)
                 plyTbl.WallPogoLastStep = curTime + 0.2
             end
         end
