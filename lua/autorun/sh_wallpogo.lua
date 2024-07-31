@@ -211,7 +211,7 @@ hook.Add("CalcMainActivity", "WallPogo_WallRunAnims", function(ply)
     if not isWallRunning then return end
 
     local curWep = ply:GetActiveWeapon()
-    local newAct = wallRunAnims[curWep:GetHoldType()] or ACT_HL2MP_RUN
+    local newAct = IsValid(curWep) and wallRunAnims[curWep:GetHoldType()] or ACT_HL2MP_RUN
 
     return newAct, -1
 end)
