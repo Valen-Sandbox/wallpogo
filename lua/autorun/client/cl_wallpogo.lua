@@ -1,6 +1,6 @@
 local angTarget  = Angle(0, 0, 0)
-local wallRunAng = 7
-local wallAngSpeed = game.IsDedicated() and 6 or 2 -- This is needed to keep speed the same on servers in my testing
+local wallRunAng = 9
+local wallAngSpeed = 6
 
 local getNW2Bool = FindMetaTable("Entity").GetNW2Bool
 

@@ -63,6 +63,12 @@ local wallRunAnims = {
     knife    = ACT_HL2MP_RUN_KNIFE,
 }
 
+local runnableWhitelist = {
+    "func_reflective_glass",
+    "func_door_rotating",
+    "func_door",
+}
+
 local plyMeta = FindMetaTable("Player")
 local getRunSpeed = plyMeta.GetRunSpeed
 local inVehicle = plyMeta.InVehicle
@@ -95,12 +101,13 @@ local function sideTrace(ply, origin, ang, plyVel, inverted)
     local plyTbl    = getTable(ply)
     local plyTrace  = plyTbl.WallPogo
     plyTrace.start  = origin
-    plyTrace.filter = ply
+    plyTrace.filter = runnableWhitelist
     plyTrace.endpos = origin + ang:Right() * (inverted and -traceDist or traceDist)
+    plyTrace.whitelist = true
 
     local traceResult = util.TraceLine(plyTrace)
 
-    if traceResult.HitWorld then
+    if traceResult.Hit then
         local wallRunVel = plyVel:GetNormalized() * 10 * wallRunSpeedMult
 
         plyTbl.WallPogoLastHitNorm = traceResult.HitNormal
